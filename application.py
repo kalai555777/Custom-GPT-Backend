@@ -1,27 +1,17 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app)  # allows OpenAI Custom GPT to call your backend
 
-@app.route("/process-onboarding", methods=["POST"])
-def process_onboarding():
-    data = request.json
+@app.route("/chat", methods=["POST"])
+def chat():
+    user_message = request.json.get("message")
+    
+    # You can still include your onboarding logic or mock GPT response
+    response = f"Mock GPT response to: {user_message}"
 
-    name = data.get("name")
-    goals = data.get("goals")
-    industry = data.get("industry")
-
-    summary = f"""
-Client Name: {name}
-Industry: {industry}
-Goals: {goals}
-
-Recommended Next Steps:
-1. Kickoff meeting
-2. Requirement gathering
-3. Model selection and scoping
-"""
-
-    return jsonify({"summary": summary})
+    return jsonify({"response": response})
 
 @app.route("/", methods=["GET"])
 def home():

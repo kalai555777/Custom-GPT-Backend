@@ -9,8 +9,10 @@ import datetime
 app = Flask(__name__)
 CORS(app)  # allows OpenAI Custom GPT to call your backend
 # --- Google Sheets setup (safe) ---
-
-SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
+SCOPES = [
+    "https://www.googleapis.com/auth/spreadsheets",
+    "https://www.googleapis.com/auth/drive"
+]
 
 def get_gsheet_client():
     """

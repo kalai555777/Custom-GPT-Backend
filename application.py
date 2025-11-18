@@ -6,12 +6,26 @@ CORS(app)  # allows OpenAI Custom GPT to call your backend
 
 @app.route("/chat", methods=["POST"])
 def chat():
-    user_message = request.json.get("message")
+    data = request.json
     
-    # You can still include your onboarding logic or mock GPT response
-    response = f"Mock GPT response to: {user_message}"
+    # Extract information sent by the user
+    name = data.get("name", "Unknown Client")
+    industry = data.get("industry", "Unknown Industry")
+    goals = data.get("goals", "No goals provided")
+    
+    # Build onboarding summary
+    summary = f"""
+Client Name: {name}
+Industry: {industry}
+Goals: {goals}
 
-    return jsonify({"response": response})
+Recommended Next Steps:
+1. Kickoff meeting
+2. Requirement gathering
+3. Model selection and scoping
+"""
+    
+    return jsonify({"response": summary.strip()})
 
 @app.route("/", methods=["GET"])
 def home():

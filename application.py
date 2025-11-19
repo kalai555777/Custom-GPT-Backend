@@ -149,29 +149,50 @@ def build_summary(record: dict) -> str:
 
     return "\n".join(lines)
 
+def client_exists(name: str) -> bool:
+    try:
+        client = get_gsheet_client()
+        if client is None:
+            return False
 
+        sheet = client.open(SPREADSHEET_NAME).worksheet(WORKSHEET_NAME)
+        rows = sheet.get_all_records()
+
+        # IMPORTANT: must match your header name exactly ("Name")
+        for row in rows:
+            if str(row.get("Name", "")).strip().lower() == name.strip().lower():
+                return True
+
+        return False
+    except Exception as e:
+        print("Error checking duplicates:", e)
+        return False
 @app.route("/chat", methods=["POST"])
 def chat():
     data = request.json or {}
 
-    # Extract information sent by the GPT / user
     record = {
         "name": data.get("name", "Unknown Client"),
         "industry": data.get("industry", "Unknown Industry"),
         "goals": data.get("goals", "No goals provided"),
-        "priority": data.get("priority"),           # Low / Medium / High
-        "timeline": data.get("timeline"),           # 1-3 months / 3-6 months / >6 months
-        "budget_range": data.get("budget_range"),   # <10k / 10k-50k / >50k
-        "main_contact": data.get("main_contact")    # name or email
+        "priority": data.get("priority"),
+        "timeline": data.get("timeline"),
+        "budget_range": data.get("budget_range"),
+        "main_contact": data.get("main_contact")
     }
 
-    # Log to Google Sheet (safely)
-    log_to_google_sheet(record)
+    # ⭐ PREVENT DUPLICATES ⭐
+    if client_exists(record["name"]):
+        return jsonify({
+            "response": f"A client named '{record['name']}' already exists in the system. No duplicate entry was created."
+        })
 
-    # Build onboarding summary with basic PM recommendations
+    # Continue normally
+    log_to_google_sheet(record)
     summary = build_summary(record)
 
     return jsonify({"response": summary})
+
 
 @app.route("/find_client", methods=["POST"])
 def find_client():

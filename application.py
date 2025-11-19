@@ -173,6 +173,49 @@ def chat():
 
     return jsonify({"response": summary})
 
+@app.route("/find_client", methods=["POST"])
+def find_client():
+    """
+    Search existing onboarding records in the Google Sheet by client name.
+    Expects JSON: { "name": "some client" }
+    """
+    data = request.json or {}
+    query = data.get("name", "").strip().lower()
+
+    if not query:
+        return jsonify({
+            "status": "error",
+            "message": "Please provide a 'name' field to search."
+        }), 400
+
+    client = get_gsheet_client()
+    if client is None:
+        return jsonify({
+            "status": "error",
+            "message": "Google Sheets client not available."
+        }), 500
+
+    try:
+        sheet = client.open(SPREADSHEET_NAME).worksheet(WORKSHEET_NAME)
+        rows = sheet.get_all_records()  # list of dicts, one per row
+
+        # IMPORTANT: "Name" must match your header in row 1
+        matches = [
+            row for row in rows
+            if query in str(row.get("Name", "")).strip().lower()
+        ]
+
+        return jsonify({
+            "status": "success",
+            "count": len(matches),
+            "results": matches
+        })
+    except Exception as e:
+        print("Error searching Google Sheet:", e)
+        return jsonify({
+            "status": "error",
+            "message": "Error searching Google Sheet."
+        }), 500
 
 @app.route("/", methods=["GET"])
 def home():
